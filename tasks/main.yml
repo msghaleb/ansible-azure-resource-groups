@@ -5,6 +5,7 @@
     resource_group_name   : "{{ azure_resource_groups_resource_group_name | default(omit) }}"
     location              : "{{ azure_resource_groups_location | default(omit) }}"
     tags                  : "{{ azure_resource_groups_tags | default(omit) }}"
+    tenant_domain         : "{{ azure_resource_groups_tenant_domain | default(omit) }}"
     subscription_id       : "{{ azure_resource_groups_subscription_id | default(omit) }}"
     client_id             : "{{ azure_resource_groups_client_id | default(omit) }}"
     client_secret         : "{{ azure_resource_groups_client_secret | default(omit) }}"
