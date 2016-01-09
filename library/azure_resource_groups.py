@@ -79,10 +79,11 @@ class AzureResourceGroups():
         self.location = self.module.params["location"]
         self.client_id = self.module.params["client_id"]
         self.client_secret = self.module.params["client_secret"]
-        self.tags = self.module.params["tags"]
+        #self.tags = self.module.params["tags"]
         self.management_url = self.module.params["management_url"]
         self.login_url  = self.module.params["login_url"]
-        self.role_definition_name = self.module.params["role_definition_name"]
+        self.tenant_domain = self.module.params["tenant_domain"]
+        #self.role_definition_name = self.module.params["role_definition_name"]
         #if not self.graph_url:
         #    self.graph_url = "https://graph.windows.net/{}".format(self.tenant_domain)
         if not self.management_url:
@@ -119,7 +120,7 @@ class AzureResourceGroups():
         self.headers = None
         #self.user_headers = None
         self.data = None
-        self.azure_version = "api-version=2015-07-01"
+        self.azure_version = "api-version=2015-11-01"
 
     # TODO: might not be needed
     def convert(self, data):
@@ -160,7 +161,7 @@ class AzureResourceGroups():
         self.resource_group_login()
         payload = {
                     "location": "{}".format(self.location),
-                    "tags": "{}".format(self.tags)
+                    #"tags": "{}".format(self.tags)
                   }
         payload = json.dumps(payload)
         url = self.management_url + "/resourceGroups/{}?{}".format(self.resource_group_name, self.azure_version)
@@ -179,7 +180,7 @@ class AzureResourceGroups():
                 print('Code: ', response_code)
                 print('Message: ', response_msg)
                 print(response_json)
-        self.module.exit_json(msg="Role Assignment Created.", changed=True)
+        self.module.exit_json(msg="Resource Group Created.", changed=True)
 
     def main(self):
         if self.state == "present":
@@ -215,12 +216,13 @@ def main():
             resource_group_name=dict(default=None, type="str", required=True),
             state=dict(default="present", choices=["absent", "present"]),
             location = dict(default=None, type="str", required=True),
-            tags=dict(default=None, type="str", required=False),
-            subscription_id=dict(default=None, type="str", required=False),
+            #tags=dict(default=None, type="str", required=False),
+            subscription_id=dict(default=None, type="str", required=True),
             client_id = dict(default=None, alias="azure_client_id", type="str", no_log=True),
             client_secret = dict(default=None, alias="azure_client_secret", type="str", no_log=True),
             management_url = dict(default=None, type="str"),
             login_url  = dict(default=None, type="str"),
+            tenant_domain = dict(default=None, type="str", required=True),
             #graph_url = dict(default=None, type="str"),
 
         ),
