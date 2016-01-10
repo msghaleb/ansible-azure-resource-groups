@@ -156,9 +156,42 @@ class AzureResourceGroups():
         self.headers = { 'Authorization' : '{} {}'.format(token_type, token),
                          'Accept' : 'application/json', "content-type": "application/json" }
 
+    def get_resource_group(self):
+        #https://msdn.microsoft.com/en-us/library/azure/dn758095.aspx
+        #Here we check if the resource group is already there or not.
+        #self.resource_group_login()
+        payload = {
+                    "location": "{}".format(self.location),
+                    #"tags": "{}".format(self.tags)
+                  }
+        payload = json.dumps(payload)
+        url = self.management_url + "/resourceGroups/{}?{}".format(self.resource_group_name, self.azure_version)
+        #print (url)
+        try:
+            r = open_url(url, method="get", headers=self.headers ,data=payload)
+        except urllib2.HTTPError, err:
+            response_code = err.getcode()
+            response_msg = err.read()
+            response_json = json.loads(response_msg)
+            if response_json.get("error", False) and "could not be found" in response_json.get("error").get("message",{}):#.get("value"):
+                #self.module.exit_json(msg="The group you specified is not found, which means you can create it!.", changed=False)
+                return False
+            else:
+                error_msg = response_json.get("error").get("message")
+                self.module.fail_json(msg="Error happend while trying to check if the resource group exists. Error code='{}' msg='{}'".format(response_code, error_msg))
+                print('Code: ', response_code)
+                print('Message: ', response_msg)
+                print(response_json)
+        return True
+        #self.module.exit_json(msg="A Resource Group with the same name in the same location is found, please specify another name or location.", changed=True)
     def create_resource_group(self):
         #https://msdn.microsoft.com/en-us/library/azure/dn906887.aspx
         self.resource_group_login()
+        check_resource_group = self.get_resource_group()
+        if check_resource_group == True:
+            self.module.exit_json(msg="A Resource Group with the same name in the same location is found, please specify another name or location.", changed=False)
+        #elif check_resource_group == False:
+        #    self.module.exit_json(msg="The group you specified is not found, which means you can create it!.", changed=False)
         payload = {
                     "location": "{}".format(self.location),
                     #"tags": "{}".format(self.tags)
@@ -199,7 +232,7 @@ class AzureResourceGroups():
             #self.principalId = self.get_user_id()
             #self.role_definition_id = self.get_role_definition()
             self.create_resource_group()
-
+            #self.get_resource_group()
             #print upn_name
 
         elif self.state == "absent":
