@@ -189,7 +189,7 @@ class AzureResourceGroups():
         self.resource_group_login()
         check_resource_group = self.get_resource_group()
         if check_resource_group == True:
-            self.module.exit_json(msg="A Resource Group with the same name in the same location is found, please specify another name or location.", changed=False)
+            self.module.exit_json(msg="The Resource Group alrady exists.", changed=False)
         #elif check_resource_group == False:
         #    self.module.exit_json(msg="The group you specified is not found, which means you can create it!.", changed=False)
         payload = {
