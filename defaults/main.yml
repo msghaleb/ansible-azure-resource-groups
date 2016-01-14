@@ -1,7 +1,7 @@
 ---
 
 resource_group_name   : "{{ azure_resource_groups_resource_group_name | default('mytestresourcegroup') }}"
-state                 : "{{ azure_resource_groups_resource_state | default('present') }}"
+state                 : "{{ azure_resource_groups_state | default('present') }}"
 location              : "{{ azure_resource_groups_location | default('westus') }}"
 tags                  : "{{ azure_resource_groups_tags | default(omit) }}"
 tenant_domain         : "{{ azure_resource_groups_tenant_domain | default('AnsibleDirectory.onmicrosoft.com') }}"
