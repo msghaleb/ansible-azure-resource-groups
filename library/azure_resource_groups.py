@@ -184,6 +184,7 @@ class AzureResourceGroups():
                 print(response_json)
         return True
         #self.module.exit_json(msg="A Resource Group with the same name in the same location is found, please specify another name or location.", changed=True)
+
     def create_resource_group(self):
         #https://msdn.microsoft.com/en-us/library/azure/dn906887.aspx
         self.resource_group_login()
@@ -205,22 +206,55 @@ class AzureResourceGroups():
             response_code = err.getcode()
             response_msg = err.read()
             response_json = json.loads(response_msg)
-            if response_json.get("error", False) and "The role assignment already exists" in response_json.get("error").get("message",{}):#.get("value"):
-                self.module.exit_json(msg="The role assignment already exists.", changed=False)
+            if response_json.get("error", False) and "The resource group already exists" in response_json.get("error").get("message",{}):#.get("value"):
+                self.module.exit_json(msg="The resource group already exists.", changed=False)
             else:
                 error_msg = response_json.get("error").get("message")
-                self.module.fail_json(msg="Error happend while trying to create the role assignment. Error code='{}' msg='{}'".format(response_code, error_msg))
+                self.module.fail_json(msg="Error happend while trying to create the resource group. Error code='{}' msg='{}'".format(response_code, error_msg))
                 print('Code: ', response_code)
                 print('Message: ', response_msg)
                 print(response_json)
         self.module.exit_json(msg="Resource Group Created.", changed=True)
 
+    def delete_resource_group(self):
+        #https://msdn.microsoft.com/en-us/library/azure/dn906887.aspx
+        self.resource_group_login()
+        check_resource_group = self.get_resource_group()
+        if check_resource_group == False:
+            self.module.exit_json(msg="The Resource Group doesn't exist.", changed=False)
+        #elif check_resource_group == False:
+        #    self.module.exit_json(msg="The group you specified is not found, which means you can create it!.", changed=False)
+        #payload = {
+        #            "location": "{}".format(self.location),
+        #            #"tags": "{}".format(self.tags)
+        #          }
+        #payload = json.dumps(payload)
+        url = self.management_url + "/resourceGroups/{}?{}".format(self.resource_group_name, self.azure_version)
+        #print (url)
+        try:
+            r = open_url(url, method="delete", headers=self.headers)
+        except urllib2.HTTPError, err:
+            response_code = err.getcode()
+            response_msg = err.read()
+            response_json = json.loads(response_msg)
+            if response_json.get("error", False) and "The resource group doesn't exist" in response_json.get("error").get("message",{}):#.get("value"):
+                self.module.exit_json(msg="The resource group doesn't exist.", changed=False)
+            else:
+                error_msg = response_json.get("error").get("message")
+                self.module.fail_json(msg="Error happend while trying to delete the resource group. Error code='{}' msg='{}'".format(response_code, error_msg))
+                print('Code: ', response_code)
+                print('Message: ', response_msg)
+                print(response_json)
+        self.module.exit_json(msg="Resource Group deleted.", changed=True)
+
     def main(self):
         if self.state == "present":
         #    if self.name.find('@')==-1 or self.name.find('.')==-1:
         #        self.module.fail_json(msg="Please make sure to enter the username (UPN) in this form e.g. username@tenant_domain.onmicrosoft.com")
-        #    if self.password == None:
-        #        self.module.fail_json(msg="You can't create a user without specifing a password!")
+            if self.location == None:
+                self.module.fail_json(msg="You can't create a resource group without specifing a location!")
+        #    if self.tenant_domain == None:
+        #        self.module.fail_json(msg="Please specify a Tenant Domain!")
         #    if self.display_name == None:
         #        i = self.name.split('@', 1)
         #        self.display_name = i[0]
@@ -236,8 +270,7 @@ class AzureResourceGroups():
             #print upn_name
 
         elif self.state == "absent":
-            self.module.exit_json(msg="Deletion is not supported.", changed=False)
-            self.login()
+            #self.module.exit_json(msg="Deletion is not supported.", changed=False)
             self.delete_resource_group()
 
 def main():
@@ -248,7 +281,7 @@ def main():
             #role_definition_name=dict(default=None, type="str", required=True),
             resource_group_name=dict(default=None, type="str", required=True),
             state=dict(default="present", choices=["absent", "present"]),
-            location = dict(default=None, type="str", required=True),
+            location = dict(default=None, type="str", required=False),
             #tags=dict(default=None, type="str", required=False),
             subscription_id=dict(default=None, type="str", required=True),
             client_id = dict(default=None, alias="azure_client_id", type="str", no_log=True),
